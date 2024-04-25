@@ -12,17 +12,20 @@ if len(sys.argv) < 2:
 employee_id = sys.argv[1]
 
 # Fetch employee data
-response = requests.get('https://jsonplaceholder.typicode.com/users/{}'.format(employee_id))
+response = requests.get(
+    'https://jsonplaceholder.typicode.com/users/{}'.format(employee_id))
 employee = response.json()
 
 # Fetch todo data
-response = requests.get('https://jsonplaceholder.typicode.com/todos?userId={}'.format(employee_id))
+response = requests.get(
+    'https://jsonplaceholder.typicode.com/todos?userId={}'.format(employee_id))
 todos = response.json()
 
 done_tasks = [task for task in todos if task['completed']]
 total_tasks = len(todos)
 
-print('Employee {} is done with tasks({}/{}):'.format(employee['name'], len(done_tasks), total_tasks))
+print('Employee {} is done with tasks({}/{}):'.format(
+    employee['name'], len(done_tasks), total_tasks))
 
 for task in done_tasks:
     print('\t {}'.format(task['title']))
