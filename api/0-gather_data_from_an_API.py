@@ -1,25 +1,41 @@
 #!/usr/bin/python3
-"""Gather data from an API"""
-
+"""
+Python script that, using REST API,
+for a given employee ID,
+returns information about his/her TODO list progress.
+"""
+import json
 import requests
-import sys
+from sys import argv
 
 
-def get_data():
-    """get data """
-    user_id = sys.argv[1]
-    users_route = 'https://jsonplaceholder.typicode.com/users/{}'
-    todos_route = 'https://jsonplaceholder.typicode.com/todos/?userId={}'
-    user = users_route.format(user_id)
-    todos = todos_route.format(user_id)
-    name = requests.get(user).json().get('name')
-    todos_request = requests.get(todos).json()
-    tasks = [task.get('title') for task in todos_request
-             if task.get('completed') is True]
-    print('Employee {} is done with tasks({}/{}):'.format(name,
-          len(tasks), len(todos_request)))
-    print('\n'.join('\t {}'.format(task) for task in tasks))
+def gather_user_information():
+    """
+    Fethces and processes user and TODO list data for the provided ID.
+    """
+    Id = argv[1]
+    user_url = f'https://jsonplaceholder.typicode.com/users/{Id}'
+    tasks_url = f'https://jsonplaceholder.typicode.com/todos?userId={Id}'
+
+    user = json.loads(requests.get(user_url).text)
+    tasks = json.loads(requests.get(tasks_url).text)
+
+    completed_tasks = []
+    completed = 0
+    employee_name = user['name']
+
+    for task in tasks:
+        if task['completed'] is True:
+            completed += 1
+            completed_tasks.append(task['title'])
+
+    print("Employee {} is done with tasks({}/{}):".format(employee_name,
+                                                          completed,
+                                                          len(tasks)))
+    for title in completed_tasks:
+        print(f"\t {title}")
 
 
 if __name__ == "__main__":
-    get_data()
+    if len(argv) == 2:
+        gather_user_information()
