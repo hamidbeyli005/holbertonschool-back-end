@@ -5,27 +5,45 @@
 import requests
 import sys
 
-if len(sys.argv) < 2:
-    print('Usage: {} <employee_id>'.format(sys.argv[0]))
-    sys.exit(1)
 
-employee_id = sys.argv[1]
+def get_todo_list_progress(employee_id):
+    base_url = "https://jsonplaceholder.typicode.com"
+    employee_url = f"{base_url}/users/{employee_id}"
+    todo_url = f"{base_url}/todos?userId={employee_id}"
 
-# Fetch employee data
-response = requests.get(
-    'https://jsonplaceholder.typicode.com/users/{}'.format(employee_id))
-employee = response.json()
+    try:
+        # Fetch employee data
+        employee_response = requests.get(employee_url)
+        employee_response.raise_for_status()
+        employee_data = employee_response.json()
 
-# Fetch todo data
-response = requests.get(
-    'https://jsonplaceholder.typicode.com/todos?userId={}'.format(employee_id))
-todos = response.json()
+        # Fetch TODO list data
+        todo_response = requests.get(todo_url)
+        todo_response.raise_for_status()
+        todo_data = todo_response.json()
 
-done_tasks = [task for task in todos if task['completed']]
-total_tasks = len(todos)
+        # Extract relevant information
+        employee_name = employee_data["name"]
+        completed_tasks = [task for task in todo_data if task["completed"]]
+        number_of_done_tasks = len(completed_tasks)
+        total_number_of_tasks = len(todo_data)
 
-print('Employee {} is done with tasks({}/{}):'.format(
-    employee['name'], len(done_tasks), total_tasks))
+        # Display information
+        print(
+            f"Employee {employee_name} is done with tasks(
+                {number_of_done_tasks}/{total_number_of_tasks}): ")
+        for task in completed_tasks:
+            print(f"\t{task['title']}")
 
-for task in done_tasks:
-    print('\t {}'.format(task['title']))
+    except requests.exceptions.RequestException as e:
+        print("Error fetching data:", e)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python script.py <employee_id>")
+        sys.exit(1)
+
+    employee_id = sys.argv[1]
+    get_todo_list_progress(employee_id)
