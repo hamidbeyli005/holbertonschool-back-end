@@ -1,34 +1,31 @@
 #!/usr/bin/python3
-"""Export data in the JSON format"""
+"""Exporting data in json format"""
 
 import json
 import requests
-import sys
+from sys import argv
 
-if len(sys.argv) < 2:
-    print('Usage: {} <employee_id>'.format(sys.argv[0]))
-    sys.exit(1)
 
-employee_id = sys.argv[1]
+def export_data():
+    """exporting data in the JSON"""
+    users_route = 'https://jsonplaceholder.typicode.com/users/{}'
+    todos_route = 'https://jsonplaceholder.typicode.com/todos/?userID={}'
+    users_url = users_route.format(argv[1])
+    todos_url = todos_route.format(argv[1])
+    user_data = requests.get(users_url).json()
+    task_data = requests.get(todos_url).json()
+    username = user_data.get('username')
+    tasks = []
 
-# Fetch employee data
-response = requests.get(
-    'https://jsonplaceholder.typicode.com/users/{}'.format(employee_id))
-employee = response.json()
+    for todo in task_data:
+        task = {'task': todo.get('title'),
+                'completed': todo.get('completed'),
+                'username': username}
+        tasks.append(task)
 
-# Fetch todo data
-response = requests.get(
-    'https://jsonplaceholder.typicode.com/todos?userId={}'.format(employee_id))
-todos = response.json()
+    with open('{}.json'.format(argv[1]), 'w') as file:
+        json.dump({argv[1]: tasks}, file)
 
-filename = '{}.json'.format(employee_id)
-data = {employee_id: []}
-for todo in todos:
-    data[employee_id].append({
-        "task": todo['title'],
-        "completed": todo['completed'],
-        "username": employee['username']
-    })
 
-with open(filename, mode='w') as file:
-    json.dump(data, file)
+if __name__ == "__main__":
+    export_data()

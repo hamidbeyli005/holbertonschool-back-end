@@ -1,30 +1,27 @@
 #!/usr/bin/python3
-"""Export data in the CSV format"""
+"""Exports data in CSV  format"""
+
 
 import csv
 import requests
 import sys
 
-if len(sys.argv) < 2:
-    print('Usage: {} <employee_id>'.format(sys.argv[0]))
-    sys.exit(1)
 
-employee_id = sys.argv[1]
+def export_data():
+    """method to export related data"""
+    user_id = sys.argv[1]
+    user = 'https://jsonplaceholder.typicode.com/users/{}'.format(user_id)
+    todos = 'https://jsonplaceholder.typicode.com/todos/?userId={}'.format(
+        user_id)
+    name = requests.get(user).json().get('username')
+    todo_requests = requests.get(todos).json()
 
-# Fetch employee data
-response = requests.get(
-    'https://jsonplaceholder.typicode.com/users/{}'.format(employee_id))
-employee = response.json()
+    with open('{}.csv'.format(user_id), 'w') as file:
+        for todo in todo_requests:
+            info = '"{}","{}","{}","{}"\n'.format(
+                user_id, name, todo.get('completed'), todo.get('title'))
+            file.write(info)
 
-# Fetch todo data
-response = requests.get(
-    'https://jsonplaceholder.typicode.com/todos?userId={}'.format(employee_id))
-todos = response.json()
 
-filename = '{}.csv'.format(employee_id)
-with open(filename, mode='w') as file:
-    writer = csv.writer(file, delimiter=',', quotechar='"',
-                        quoting=csv.QUOTE_ALL)
-    for todo in todos:
-        writer.writerow([employee_id, employee['username'],
-                        todo['completed'], todo['title']])
+if __name__ == "__main__":
+    export_data()

@@ -1,28 +1,32 @@
 #!/usr/bin/python3
+"""
+Saving to CSV
+"""
 
-import json
-import requests
+if __name__ == '__main__':
+    import requests
+    import json
 
+    user_url = "https://jsonplaceholder.typicode.com/users"
+    todos_url = "https://jsonplaceholder.typicode.com/todos?userId={:d}"
 
-def export_to_json():
-    users = requests.get('https://jsonplaceholder.typicode.com/users').json()
-    todo = requests.get('https://jsonplaceholder.typicode.com/todos').json()
+    ids_resp = requests.get(user_url).json()
+    ids = [
+            {
+                "id": int(resp.get("id")), "username": resp.get("username")
+                } for resp in ids_resp
+            ]
 
-    user_tasks = {}
-    for user in users:
-        user_tasks[user['id']] = []
-        for task in todo:
-            if task['userId'] == user['id']:
-                task_dict = {
-                    'username': user['username'],
-                    'task': task['title'],
-                    'completed': task['completed']
-                }
-                user_tasks[user['id']].append(task_dict)
+    final_dict = dict()
 
-    with open('todo_all_employees.json', 'w') as json_file:
-        json.dump(user_tasks, json_file)
+    for obj in ids:
+        todos = requests.get(todos_url.format(obj["id"])).json()
+        tasks = [{
+            "username": obj["username"],
+            "task": todo.get("title"),
+            "completed": todo.get("completed")
+            } for todo in todos]
+        final_dict |= {str(obj["id"]): tasks}
 
-
-if __name__ == "__main__":
-    export_to_json()
+    with open("todo_all_employees.json", "w") as fp:
+        fp.write(json.dumps(final_dict))
